@@ -26,7 +26,7 @@ jobs:
           cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
           chmod 700 ~/.ssh && chmod 700 ~/.ssh/*
           ls -l ~/.ssh/
-      - uses: mdallasanta/ssh-scp-deploy@{version}
+      - uses: mdallasanta/ssh-scp-deploy@1.0.4
         name: scp
         with:
           local: './'                                                  # Local file path - REQUIRED false - DEFAULT ./
