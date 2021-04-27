@@ -31,10 +31,19 @@ jobs:
         with:
           local: './'                                                  # Local file path - REQUIRED false - DEFAULT ./
           remote: '/home/software'                                     # Remote file path - REQUIRED false - DEFAULT ~/
-          host: ${{secrets.HOST}}                                      # Remote server address - REQUIRED true
-          user: ${{secrets.USER}}                                      # Remote server user - REQUIRED true
-          password: ${{secrets.PASSWORD}}                              # User password - REQUIRED at least one of "password" or "key"
+          host: ${{ secrets.HOST }}                                      # Remote server address - REQUIRED true
+          user: ${{ secrets.USER }}                                      # Remote server user - REQUIRED true
+          password: ${{ secrets.PASSWORD }}                              # User password - REQUIRED at least one of "password" or "key"
           pre_upload: echo "This will be executed before the upload!"  # Command to run via ssh before scp upload - REQUIRED false
           post_upload: echo "This will be executed after the upload!"  # Command to run via ssh after scp upload - REQUIRED false
           ssh_options: -o StrictHostKeyChecking=no                     # A set of ssh_option separated by -o - REQUIRED false - DEFAULT -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null
           scp_options: -v                                              # Flags to use during scp - REQUIRED false - DEFAULT ''
+      - name: Run sshpass commands
+        uses: matheusvanzan/sshpass-action@v1
+        with:
+          host: ${{ secrets.HOST }}
+          user: ${{ secrets.USER }}
+          pass: ${{ secrets.PASSWORD }}
+          run: |
+            cd /home/software
+            ./restart.sh
