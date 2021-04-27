@@ -45,5 +45,6 @@ jobs:
           user: ${{ secrets.USER }}
           pass: ${{ secrets.PASSWORD }}
           run: |
+
             cd /home/software
             ./restart.sh
