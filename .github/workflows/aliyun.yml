@@ -30,7 +30,7 @@ jobs:
         name: scp
         with:
           local: './'                                                  # Local file path - REQUIRED false - DEFAULT ./
-          remote: '~/'                                                 # Remote file path - REQUIRED false - DEFAULT ~/
+          remote: '/home/software'                                     # Remote file path - REQUIRED false - DEFAULT ~/
           host: ${{secrets.HOST}}                                      # Remote server address - REQUIRED true
           user: ${{secrets.USER}}                                      # Remote server user - REQUIRED true
           password: ${{secrets.PASSWORD}}                              # User password - REQUIRED at least one of "password" or "key"
