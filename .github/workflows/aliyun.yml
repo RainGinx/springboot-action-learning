@@ -20,14 +20,14 @@ jobs:
       - name: Build with Maven
         run: mvn --batch-mode --update-snapshots verify
       - name: Set SSH Environment
-          run: |
-            mkdir -p ~/.ssh/
+        run: |
+          mkdir -p ~/.ssh/
 #            echo "${{ secrets.ID_RSA }}" > ~/.ssh/id_rsa
-            echo "${{ secrets.RSA_ALIYUN }}" > ~/.ssh/id_rsa.pub
-            cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
+          echo "${{ secrets.RSA_ALIYUN }}" > ~/.ssh/id_rsa.pub
+          cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
 #            chmod 600 ~/.ssh/id_rsa
-            chmod 700 ~/.ssh && chmod 700 ~/.ssh/*
-            ls -l ~/.ssh/
+          chmod 700 ~/.ssh && chmod 700 ~/.ssh/*
+          ls -l ~/.ssh/
       - uses: mdallasanta/ssh-scp-deploy@{version}
         name: scp
         with:
