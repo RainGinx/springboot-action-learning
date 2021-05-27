@@ -6,8 +6,8 @@ spring:
   cloud:
     nacos:
       discovery:
-        server-addr: 192.168.59.129:8848
+        server-addr: 120.78.206.184:8848
       config:
-        server-addr: 192.168.59.129:8848
+        server-addr: 120.78.206.184:8848
         file-extension: yaml
         shared-adtaids: ces_datasouce.yml
