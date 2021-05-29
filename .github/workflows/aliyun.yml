@@ -47,4 +47,4 @@ jobs:
           run: |
             cd /home/software
             source /etc/profile
-            ./restart.sh
+            ./restart.sh springboot-action-learning-1.0-SNAPSHOT.jar
