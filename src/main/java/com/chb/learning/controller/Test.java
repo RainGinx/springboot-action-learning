@@ -1,6 +1,6 @@
 package com.chb.learning.controller;
 
-import com.chb.learning.entity.User;
+import com.chb.learning.entity.po.User;
 import com.chb.learning.mapper.UserMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -21,7 +21,8 @@ public class Test {
 
     @GetMapping("list")
     public List<User> list(){
-        return userMapper.selectList(null);
+        List<User> list= userMapper.selectList(null);
+        return list;
     }
 
     public static void main(String[] args) {

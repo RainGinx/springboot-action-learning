@@ -1,10 +1,13 @@
 package com.chb.learning.config;
 
-import com.chb.learning.entity.Permission;
-import com.chb.learning.entity.Role;
-import com.chb.learning.entity.User;
+import com.chb.learning.entity.vo.PermissionVo;
+import com.chb.learning.entity.vo.RoleVo;
+import com.chb.learning.entity.vo.UserVo;
 import com.chb.learning.service.LoginService;
-import org.apache.shiro.authc.*;
+import org.apache.shiro.authc.AuthenticationException;
+import org.apache.shiro.authc.AuthenticationInfo;
+import org.apache.shiro.authc.AuthenticationToken;
+import org.apache.shiro.authc.SimpleAuthenticationInfo;
 import org.apache.shiro.authz.AuthorizationInfo;
 import org.apache.shiro.authz.SimpleAuthorizationInfo;
 import org.apache.shiro.realm.AuthorizingRealm;
@@ -34,14 +37,14 @@ public class AdminRealm extends AuthorizingRealm {
         //获取登录用户名
         String name = (String) principalCollection.getPrimaryPrincipal();
         //查询用户名称
-        User user = loginService.getUserByName(name);
+        UserVo user = loginService.getUserByName(name);
         //添加角色和权限
         SimpleAuthorizationInfo simpleAuthorizationInfo = new SimpleAuthorizationInfo();
-        for (Role role : user.getRoles()) {
+        for (RoleVo role : user.getRoles()) {
             //添加角色
             simpleAuthorizationInfo.addRole(role.getName());
             //添加权限
-            for (Permission permissions : role.getPermissions()) {
+            for (PermissionVo permissions : role.getPermissions()) {
                 simpleAuthorizationInfo.addStringPermission(permissions.getName());
             }
         }
@@ -62,7 +65,7 @@ public class AdminRealm extends AuthorizingRealm {
         }
         //获取用户信息
         String name = authenticationToken.getPrincipal().toString();
-        User user = loginService.getUserByName(name);
+        UserVo user = loginService.getUserByName(name);
         if (user == null) {
             //这里返回后会报出对应异常
             return null;

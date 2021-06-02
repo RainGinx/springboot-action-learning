@@ -1,6 +1,6 @@
 package com.chb.learning.service;
 
-import com.chb.learning.entity.User;
+import com.chb.learning.entity.vo.UserVo;
 
 /**
  * @author caihongbin
@@ -8,5 +8,5 @@ import com.chb.learning.entity.User;
  */
 public interface LoginService {
 
-    User getUserByName(String name);
+    UserVo getUserByName(String name);
 }

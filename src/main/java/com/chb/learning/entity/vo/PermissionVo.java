@@ -1,17 +1,15 @@
-package com.chb.learning.entity;
+package com.chb.learning.entity.vo;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
 /**
  * @author caihongbin
- * @date 2021/6/2 9:58
+ * @date 2021/6/2 14:14
  */
 @Data
-@AllArgsConstructor
-public class Permission {
+public class PermissionVo {
 
     private Long id;
     private String name;
-
 }

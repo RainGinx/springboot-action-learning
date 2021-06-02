@@ -1,5 +1,6 @@
-package com.chb.learning.entity;
+package com.chb.learning.entity.vo;
 
+import com.chb.learning.entity.po.Role;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
@@ -7,11 +8,10 @@ import java.util.Set;
 
 /**
  * @author caihongbin
- * @date 2021/5/29 14:56
+ * @date 2021/6/2 14:11
  */
 @Data
-@AllArgsConstructor
-public class User {
+public class UserVo {
 
     private Long id;
     private String name;
@@ -19,5 +19,5 @@ public class User {
     private String email;
     private String password;
 
-    private Set<Role> roles;
+    private Set<RoleVo> roles;
 }
