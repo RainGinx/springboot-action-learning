@@ -1,10 +1,15 @@
 package com.chb.learning.handler;
 
+import com.chb.learning.auth.entity.BaseResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.shiro.ShiroException;
 import org.apache.shiro.authz.AuthorizationException;
+import org.apache.shiro.authz.UnauthorizedException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
+
+import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author caihongbin
@@ -14,10 +19,32 @@ import org.springframework.web.bind.annotation.ResponseBody;
 @Slf4j
 public class MyExceptionHandler {
 
-    @ExceptionHandler
+    @ExceptionHandler(AuthorizationException.class)
     @ResponseBody
     public String ErrorHandler(AuthorizationException e) {
         log.error("没有通过权限验证！", e);
         return "没有通过权限验证！";
     }
+
+    // 捕捉shiro的异常
+    @ExceptionHandler(UnauthorizedException.class)
+    @ResponseBody
+    public Object handleShiroException(ShiroException e) {
+        BaseResponse<Object> ret = new BaseResponse<Object>();
+        ret.setErrCode(401);
+        ret.setMsg(e.getMessage());
+        return ret;
+    }
+
+    // 捕捉其他所有异常
+    @ExceptionHandler(Exception.class)
+    @ResponseBody
+    public Object globalException(HttpServletRequest request, Throwable ex) {
+        BaseResponse<Object> ret = new BaseResponse<Object>();
+        ret.setErrCode(401);
+        ret.setData("认证不通过");
+        ret.setMsg(ex.getMessage());
+        return ret;
+    }
+
 }

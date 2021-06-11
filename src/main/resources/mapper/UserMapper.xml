@@ -16,6 +16,7 @@
         <result column="age" property="age" />
         <result column="email" property="email" />
         <result column="password" property="password" />
+        <result column="locked" property="locked" />
         <collection property="roles" ofType="com.chb.learning.entity.vo.RoleVo">
             <id column="role_id" property="id" />
             <result column="role_name" property="name" />

@@ -1,17 +1,20 @@
 package com.chb.learning.controller;
 
+import com.chb.learning.auth.entity.BaseResponse;
 import com.chb.learning.entity.po.User;
+import com.chb.learning.auth.entity.JwtToken;
+import com.chb.learning.utils.JwtUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.shiro.SecurityUtils;
-import org.apache.shiro.authc.AuthenticationException;
-import org.apache.shiro.authc.UnknownAccountException;
-import org.apache.shiro.authc.UsernamePasswordToken;
+import org.apache.shiro.authc.*;
 import org.apache.shiro.authz.AuthorizationException;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.apache.shiro.authz.annotation.RequiresRoles;
 import org.apache.shiro.subject.Subject;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
+
+import javax.servlet.http.HttpServletResponse;
 
 /**
  * @author caihongbin
@@ -22,33 +25,48 @@ import org.springframework.web.bind.annotation.*;
 @Slf4j
 public class LoginController {
 
-    @GetMapping("/login")
-    public String login(User user) {
+    @PostMapping("/login")
+    public BaseResponse<Object> login(@RequestBody User user,HttpServletResponse response) {
+        BaseResponse<Object> ret = new BaseResponse<>();
         if (StringUtils.isEmpty(user.getName()) || StringUtils.isEmpty(user.getPassword())) {
-            return "请输入用户名和密码！";
+
+            ret.setData("请输入用户名和密码！");
+            return ret;
         }
         //用户认证信息
+        // 若登录成功，签发 JWT token
+        String jwtToken = JwtUtils.sign(user.getName(), user.getPassword(), JwtUtils.SECRET);
         Subject subject = SecurityUtils.getSubject();
-        UsernamePasswordToken usernamePasswordToken = new UsernamePasswordToken(
-                user.getName(),
-                user.getPassword()
-        );
+        JwtToken token = new JwtToken(user.getName(), user.getPassword());
+        token.setToken(jwtToken);
+        boolean loginSuccess = false;
+        String msg;
         try {
-            //进行验证，这里可以捕获异常，然后返回对应信息
-            subject.login(usernamePasswordToken);
-//            subject.checkRole("admin");
-//            subject.checkPermissions("query", "add");
-        } catch (UnknownAccountException e) {
-            log.error("用户名不存在！", e);
-            return "用户名不存在！";
-        } catch (AuthenticationException e) {
-            log.error("账号或密码错误！", e);
-            return "账号或密码错误！";
-        } catch (AuthorizationException e) {
-            log.error("没有权限！", e);
-            return "没有权限";
+            subject.login(token);
+            msg = "登录成功。";
+            loginSuccess = true;
+        } catch (UnknownAccountException uae) { // 账号不存在
+            msg = "用户名与密码不匹配，请检查后重新输入！";
+        } catch (IncorrectCredentialsException ice) { // 账号与密码不匹配
+            msg = "用户名与密码不匹配，请检查后重新输入！";
+        } catch (LockedAccountException lae) { // 账号已被锁定
+            msg = "该账户已被锁定，如需解锁请联系管理员！";
+        } catch (AuthenticationException ae) { // 其他身份验证异常
+            msg = "登录异常，请联系管理员！";
         }
-        return "login success";
+
+        if (loginSuccess) {
+            // 将签发的 JWT token 设置到 HttpServletResponse 的 Header 中
+            response.setHeader(JwtUtils.AUTH_HEADER, jwtToken);
+            //
+            ret.setErrCode(0);
+            ret.setMsg(msg);
+            return ret;
+        } else {
+            ret.setErrCode(401);
+            ret.setMsg(msg);
+            return ret;
+        }
     }
 
     @RequiresRoles("admin")
@@ -67,5 +85,11 @@ public class LoginController {
     @GetMapping("/add")
     public String add() {
         return "add success!";
+    }
+
+    @GetMapping("error")
+    @ResponseBody
+    public String error(){
+        return "登录失败,请重试";
     }
 }

@@ -18,6 +18,8 @@ public class UserVo {
     private Integer age;
     private String email;
     private String password;
+    private Boolean locked; // 账户是否被锁定
+
 
     private Set<RoleVo> roles;
 }
