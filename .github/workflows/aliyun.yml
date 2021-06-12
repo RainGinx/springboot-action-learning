@@ -45,6 +45,5 @@ jobs:
           user: ${{ secrets.USER }}
           pass: ${{ secrets.PASSWORD }}
           run: |
-            cd /home/software
             source /etc/profile
-            ./restart.sh springboot-action-learning-1.0-SNAPSHOT.jar
+            sh /home/software/restart.sh springboot-action-learning-1.0-SNAPSHOT.jar

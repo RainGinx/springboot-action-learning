@@ -35,7 +35,7 @@ import java.util.Map;
  */
 @Configuration
 public class ShiroConfig {
-
+    //anno、authc、authcBasic、logout、noSessionCreation、perms、port、rest、roles、ssl、user
     private static final String ANON = "anon";
 
     @Bean
@@ -66,7 +66,7 @@ public class ShiroConfig {
         shiroFilterFactoryBean.setSecurityManager(securityManager);
         shiroFilterFactoryBean.setLoginUrl("/login");
         shiroFilterFactoryBean.setSuccessUrl("/index");
-        shiroFilterFactoryBean.setUnauthorizedUrl("/unauthorized");
+        shiroFilterFactoryBean.setUnauthorizedUrl("/error/unauthorized/**");
 
         // 添加 jwt 专用过滤器，拦截除 /login 和 /logout 外的请求
         Map<String, Filter> filterMap = new LinkedHashMap<>();
@@ -75,6 +75,7 @@ public class ShiroConfig {
 
         LinkedHashMap<String, String> filterChainDefinitionMap = new LinkedHashMap<>();
         filterChainDefinitionMap.put("/login", ANON); // 可匿名访问
+        filterChainDefinitionMap.put("/error/unauthorized/**", ANON); // 可匿名访问
         filterChainDefinitionMap.put("/logout", "logout"); // 退出登录
         filterChainDefinitionMap.put("/**", "jwtFilter,authc"); // 需登录才能访问
         shiroFilterFactoryBean.setFilterChainDefinitionMap(filterChainDefinitionMap);

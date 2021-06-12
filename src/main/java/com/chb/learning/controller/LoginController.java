@@ -14,7 +14,9 @@ import org.apache.shiro.subject.Subject;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.util.Map;
 
 /**
  * @author caihongbin
@@ -89,7 +91,8 @@ public class LoginController {
 
     @GetMapping("error")
     @ResponseBody
-    public String error(){
-        return "登录失败,请重试";
+    public BaseResponse<String> error(HttpServletRequest request){
+        Map<String, String[]> error = request.getParameterMap();
+        return new BaseResponse<>(Integer.valueOf(error.get("status")[0]),error.get("message")[0],null);
     }
 }

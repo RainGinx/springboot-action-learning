@@ -1,10 +1,16 @@
 package com.chb.learning.auth.config;
 
+import com.auth0.jwt.JWT;
+import com.auth0.jwt.algorithms.Algorithm;
+import com.auth0.jwt.exceptions.JWTVerificationException;
+import com.auth0.jwt.exceptions.TokenExpiredException;
+import com.auth0.jwt.interfaces.JWTVerifier;
 import com.chb.learning.entity.vo.PermissionVo;
 import com.chb.learning.entity.vo.RoleVo;
 import com.chb.learning.entity.vo.UserVo;
 import com.chb.learning.service.LoginService;
 import com.chb.learning.auth.entity.JwtToken;
+import com.chb.learning.utils.JwtUtils;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authc.*;
 import org.apache.shiro.authz.AuthorizationInfo;
@@ -31,7 +37,7 @@ public class AdminRealm extends AuthorizingRealm {
      */
     @Override
     public boolean supports(AuthenticationToken token) {
-        return token !=null && JwtToken.class.isAssignableFrom(token.getClass());
+        return token != null && JwtToken.class.isAssignableFrom(token.getClass());
     }
 
     /**
@@ -41,11 +47,23 @@ public class AdminRealm extends AuthorizingRealm {
     protected AuthenticationInfo doGetAuthenticationInfo(AuthenticationToken authcToken)
             throws AuthenticationException {
         JwtToken jwtToken = (JwtToken) authcToken;
+
+        String token = jwtToken.getToken();
         // 从 JwtToken 中获取当前用户
         String username = jwtToken.getPrincipal().toString();
         if (username == null) {
             throw new AccountException("JWT token参数异常！");
         }
+        try {
+            Algorithm algorithm = Algorithm.HMAC256(JwtUtils.SECRET);
+            JWTVerifier verifier = JWT.require(algorithm).withClaim("username", username).build();
+            verifier.verify(token);
+        } catch (IllegalArgumentException e) {
+            throw new AuthenticationException("The Token has expired");
+        } catch (TokenExpiredException e) {
+            throw new AuthenticationException("The Token has expired");
+        }
+
         // 查询数据库获取用户信息，此处使用 Map 来模拟数据库
         UserVo user = loginService.getUserByName(username);
 
@@ -73,7 +91,7 @@ public class AdminRealm extends AuthorizingRealm {
         Set<String> roles = roleSet.stream().map(RoleVo::getName).collect(Collectors.toSet());
         // 查询数据库，获取用户的权限信息
         Set<PermissionVo> permissionSet = new HashSet<>();
-        roleSet.stream().map(RoleVo::getPermissions).forEach(p->permissionSet.addAll(p));
+        roleSet.stream().map(RoleVo::getPermissions).forEach(p -> permissionSet.addAll(p));
         Set<String> perms = permissionSet.stream().map(PermissionVo::getName).collect(Collectors.toSet());
         SimpleAuthorizationInfo info = new SimpleAuthorizationInfo();
         info.setRoles(roles);

@@ -8,6 +8,7 @@ import com.chb.learning.auth.entity.JwtToken;
 import com.chb.learning.utils.JwtUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.shiro.ShiroException;
+import org.apache.shiro.authc.AccountException;
 import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.AuthenticationToken;
 import org.apache.shiro.authz.UnauthorizedException;
@@ -21,7 +22,9 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 import java.io.PrintWriter;
+import java.net.URLEncoder;
 
 /**
  * @author caihongbin
@@ -71,9 +74,6 @@ public class MyFilter extends BasicHttpAuthenticationFilter {
         } catch (IllegalStateException e) { // not found any token
             log.error("Not found any token");
             throw new UnauthorizedException("Not found any token");
-        }catch (TokenExpiredException e){
-            //eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJwYXNzd29yZCI6IjEyMzQ1NiIsImV4cCI6MTYyMzM5MTQwMywidXNlcm5hbWUiOiJ0b20ifQ.3cQdvFFOaQnIuGj43242ltcmxOOQ5bjBSGcg8zokDoI
-            throw new UnauthorizedException("The Token has expired");
         }catch (Exception e) {
             log.error("Error occurs when login", e);
             throw new UnauthorizedException("Error occurs when login");
@@ -102,16 +102,24 @@ public class MyFilter extends BasicHttpAuthenticationFilter {
         }
         try {
             String token = jwtToken.getToken();
+            // 从 JwtToken 中获取当前用户
             String username = jwtToken.getPrincipal().toString();
+            if (username == null) {
+                throw new AccountException("JWT token参数异常！");
+            }
             Algorithm algorithm = Algorithm.HMAC256(JwtUtils.SECRET);
             JWTVerifier verifier = JWT.require(algorithm).withClaim("username", username).build();
             verifier.verify(token);
-
             Subject subject = getSubject(request, response);
             subject.login(jwtToken); // 交给 Shiro 去进行登录验证
             return onLoginSuccess(jwtToken, subject, request, response);
         } catch (AuthenticationException e) {
             return onLoginFailure(jwtToken, e, request, response);
+        }catch (TokenExpiredException e){
+            //eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJwYXNzd29yZCI6IjEyMzQ1NiIsImV4cCI6MTYyMzM5MTQwMywidXNlcm5hbWUiOiJ0b20ifQ.3cQdvFFOaQnIuGj43242ltcmxOOQ5bjBSGcg8zokDoI
+//            throw new UnauthorizedException("The Token has expired");
+            responseError(response,401,"The Token has expired");
+            return false;
         }
     }
 
@@ -131,13 +139,13 @@ public class MyFilter extends BasicHttpAuthenticationFilter {
      */
     @Override
     protected boolean onAccessDenied(ServletRequest servletRequest, ServletResponse servletResponse) throws Exception {
-        HttpServletResponse httpResponse = WebUtils.toHttp(servletResponse);
-        httpResponse.setCharacterEncoding("UTF-8");
-        httpResponse.setContentType("application/json;charset=UTF-8");
-        httpResponse.setStatus(HttpStatus.UNAUTHORIZED.value());
-        PrintWriter writer = httpResponse.getWriter();
-        writer.write("{\"errCode\": 401, \"msg\": \"UNAUTHORIZED\"}");
-        fillCorsHeader(WebUtils.toHttp(servletRequest), httpResponse);
+//        HttpServletResponse httpResponse = WebUtils.toHttp(servletResponse);
+//        httpResponse.setCharacterEncoding("UTF-8");
+//        httpResponse.setContentType("application/json;charset=UTF-8");
+//        httpResponse.setStatus(HttpStatus.UNAUTHORIZED.value());
+//        PrintWriter writer = httpResponse.getWriter();
+//        writer.write("{\"errCode\": 401, \"msg\": \"UNAUTHORIZED\"}");
+//        fillCorsHeader(WebUtils.toHttp(servletRequest), httpResponse);
         return false;
     }
 
@@ -164,6 +172,17 @@ public class MyFilter extends BasicHttpAuthenticationFilter {
     protected boolean onLoginFailure(AuthenticationToken token, AuthenticationException e, ServletRequest request,
                                      ServletResponse response) {
         // 此处直接返回 false ，交给后面的  onAccessDenied()方法进行处理
+        try {
+            HttpServletResponse httpResponse = WebUtils.toHttp(response);
+            httpResponse.setCharacterEncoding("UTF-8");
+            httpResponse.setContentType("application/json;charset=UTF-8");
+            httpResponse.setStatus(HttpStatus.UNAUTHORIZED.value());
+            PrintWriter writer = httpResponse.getWriter();
+            writer.write("{\"errCode\": 401, \"msg\": \""+e.getMessage()+"\"}");
+            fillCorsHeader(WebUtils.toHttp(request), httpResponse);
+        } catch (IOException ioException) {
+            throw e;
+        }
         return false;
     }
 
@@ -180,5 +199,21 @@ public class MyFilter extends BasicHttpAuthenticationFilter {
     @Override
     public void setLoginUrl(String loginUrl) {
         super.setLoginUrl(loginUrl);
+    }
+
+    /**
+     * 将非法请求跳转到 /filterError/**中
+     */
+    private void responseError(ServletResponse response, int code,String message) {
+        try {
+            HttpServletResponse httpServletResponse = (HttpServletResponse) response;
+            //设置编码，否则中文字符在重定向时会变为空字符串
+            message = URLEncoder.encode(message, "UTF-8");
+            //如果有项目名称路径记得加上
+            httpServletResponse.sendRedirect("/error/unauthorized" + "/" + message);
+
+        } catch (IOException e1) {
+            log.error(e1.getMessage());
+        }
     }
 }
